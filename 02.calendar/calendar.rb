@@ -32,9 +32,7 @@ days = [*first_day..last_day]
 
 # 土曜日が来る毎に折り返し表示する
 days.each do |i|
-  if i.wday == 6 && i.day.to_s.length == 1
-    puts (" #{i.day.to_s.rjust(2)}")
-  elsif i.wday == 6
+  if i.wday == 6
     puts (" #{i.day.to_s.rjust(2)}")
   else
     print (" #{i.day.to_s.rjust(2)}")
