@@ -1,16 +1,10 @@
 require 'date'
-
-# コマンドライン引数があるかどうか
+require 'optparse'
+opt = OptionParser.new
 dates = Date.today
-if ARGV[0] == "-y" && ARGV[2] == "-m"
-  dates = Date.new(ARGV[1].to_i, ARGV[3].to_i)
-elsif ARGV[0] == "-y"
-  dates = Date.new(ARGV[1].to_i, dates.month) 
-elsif ARGV[0] == "-m"
-  dates = Date.new(dates.year, ARGV[1].to_i)
-else ARGV[0] == nil
-  dates
-end
+opt.on('-y','--year ARG','puts year'){|a| dates = Date.new(a.to_i, dates.month)}
+opt.on('-m','--month ARG','puts month '){|b| dates = Date.new(dates.year, b.to_i)}
+opt.parse!(ARGV)
 
 # カレンダー上部の月、年、曜日を表示
 puts ("      #{dates.month}月 ") + "#{dates.year}"
