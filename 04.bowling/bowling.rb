@@ -4,23 +4,23 @@ scores = score.split(',')
 score_10_frame = scores.slice!(-3, 3)
 shots = []
 # ストライクがある時は[10, 0]にする
-scores.each do |s|
+shots = scores.map do |s|
   if s == 'X'
-    shots << 10
-    shots << 0
+    [10, 0]
   else
-    shots << s.to_i
+    s.to_i
   end
 end
 # 抜き出していた３投を追加する
-score_10_frame.each do |s|
-  shots << if s == 'X'
-             10
-           else
-             s.to_i
-           end
+shots_10_frame = score_10_frame.map do |s|
+  if s == 'X'
+    10
+  else
+    s.to_i
+  end
 end
-
+shots << shots_10_frame
+shots.flatten!
 # 9フレームに分ける
 frames = []
 9.times do |_i|
