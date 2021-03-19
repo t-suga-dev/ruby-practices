@@ -3,24 +3,21 @@
 require 'etc'
 require 'optparse'
 
-# lオプションがないときの処理
-def max_word_count(files)
-  # 要素の中で一番大きい文字数を持つものを抽出
-  max_element = files.map(&:length).max
+def max_word_count(file_names)
+  max_element = file_names.max_by(&:length).length
 
-  files.map do |element|
+  file_names.map do |element|
     element.ljust(max_element)
   end
 end
 
 COLUMN_COUNT = 3
-def process_ls(files)
-  file_count = files.count
+def process_ls(file_names)
+  file_count = file_names.count
 
-  # 要素の数をもとに一列にいくつの要素が並ぶかを計算
   column = (file_count.to_f / COLUMN_COUNT).ceil
 
-  sliced_files = max_word_count(files).each_slice(column).to_a
+  sliced_files = max_word_count(file_names).each_slice(column).to_a
 
   blank_count = sliced_files[0].length - sliced_files[COLUMN_COUNT - 1].length
   blank_count.times do
@@ -32,44 +29,21 @@ def process_ls(files)
   end
 end
 
-# lオプションがあるときの処理
-def block_size(files)
-  files.sum { |file| File.stat(file).blocks }
+def block_size(file_names)
+  file_names.sum { |file_name| File.stat(file_name).blocks }
 end
 
-def file_type(ftype)
-  ftype == 'file' ? '-' : 'd'
+def file_type(file_stat)
+  file_stat.ftype == 'file_name' ? '-' : 'd'
 end
 
-def file_details(file)
-  file_type(file.ftype)
+def permission_connect(file_stat)
+  file_octal = file_stat.mode.to_s(8)
+  "#{permission(file_octal[-3].to_i)}#{permission(file_octal[-2].to_i)}#{permission(file_octal[-1].to_i)}"
 end
 
-# パーミッション識別のためにファイルモードにして８進数にする
-def octal(file)
-  file.mode.to_s(8)
-end
-
-def owner(file)
-  permission_judge(octal(file)[-3].to_i)
-end
-
-def group(file)
-  permission_judge(octal(file)[-2].to_i)
-end
-
-def other(file)
-  permission_judge(octal(file)[-1].to_i)
-end
-
-# パーミッションをつなげる
-def permission(file)
-  "#{owner(file)}#{group(file)}#{other(file)}"
-end
-
-# パーミッション置き換え
-def permission_judge(octal)
-  case octal
+def permission(file_octal)
+  case file_octal
   when 0
     '---'
   when 1
@@ -89,48 +63,39 @@ def permission_judge(octal)
   end
 end
 
-def hard_link(file)
-  file.nlink
+def user_name(file_stat)
+  Etc.getpwuid(file_stat.uid).name
 end
 
-def user_name(file)
-  Etc.getpwuid(file.uid).name
+def group_name(file_stat)
+  Etc.getgrgid(file_stat.gid).name
 end
 
-def group_name(file)
-  Etc.getgrgid(file.gid).name
+def time(file_stat)
+  file_stat.ctime.strftime('%-m %e %R')
 end
 
-def byte_size(file)
-  file.size
-end
-
-def time(file)
-  file.ctime.strftime('%-m %e %R')
-end
-
-# 最終的なlオプションの結果を表示
-def process_ls_l(files)
-  puts "total #{block_size(files)}"
-  files.each do |file|
-    stat = File.stat(file)
-    puts "#{file_details(stat)}#{permission(stat)}  #{hard_link(stat)}  #{user_name(stat)}   #{group_name(stat)}  #{byte_size(stat)}  #{time(stat)}  #{file}"
+def process_ls_l(file_names)
+  puts "total #{block_size(file_names)}"
+  file_names.each do |file_name|
+    stat = File.stat(file_name)
+    puts "#{file_type(stat)}#{permission_connect(stat)}  #{stat.nlink}  #{user_name(stat)}   #{group_name(stat)}  #{stat.size}  #{time(stat)}  #{file_name}"
   end
 end
 
 # 処理開始
 option = ARGV.getopts('l', 'a', 'r')
-files =
+file_names =
   if option['a']
     Dir.glob('*', File::FNM_DOTMATCH).sort
   else
     Dir.glob('*').sort
   end
 
-files.reverse! if option['r']
+file_names.reverse! if option['r']
 
 if option['l']
-  process_ls_l(files)
+  process_ls_l(file_names)
 else
-  process_ls(files)
+  process_ls(file_names)
 end
