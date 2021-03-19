@@ -34,7 +34,7 @@ def block_size(file_names)
 end
 
 def file_type(file_stat)
-  file_stat.ftype == 'file_name' ? '-' : 'd'
+  file_stat.ftype == 'file' ? '-' : 'd'
 end
 
 def permission_connect(file_stat)
