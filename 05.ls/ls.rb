@@ -39,7 +39,9 @@ end
 
 def permission_connect(file_stat)
   file_octal = file_stat.mode.to_s(8)
-  "#{permission(file_octal[-3].to_i)}#{permission(file_octal[-2].to_i)}#{permission(file_octal[-1].to_i)}"
+  permission_rwx = []
+  -3.upto(-1) { |i| permission_rwx << permission(file_octal[i].to_i) }
+  permission_rwx.join
 end
 
 def permission(file_octal)
